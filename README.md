@@ -8,6 +8,8 @@ This is a decentralized, moderated commenting engine for Jamstack blogs or websi
 
 **Try it out** by entering a comment on the [example blog page](https://thrownness.com/decentralized-jamstack-comments-engine/exampleBlog.html)
 
+![image](https://user-images.githubusercontent.com/57295746/83358979-22caac00-a345-11ea-934c-5dd6076bd29e.png)
+
 I will see them in the [Moderation Dashboard](https://thrownness.com/decentralized-jamstack-comments-engine/) because I am logged in as the owner of that example blog page.
 
 ![image](https://user-images.githubusercontent.com/57295746/83358816-1c880000-a344-11ea-90c5-6f24367c2cef.png)
