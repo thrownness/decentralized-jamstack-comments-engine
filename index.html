@@ -177,6 +177,11 @@ getComments();
                 myKeys = keys;
                 document.getElementById('blogPubKey').innerText = myKeys.pub;
                 document.getElementById('blogEPubKey').innerText = myKeys.epub;
+
+                if (user.is) {
+                    user.get('name').once((name) => { accountName = name })
+                }
+                
                 focusView('home');
             }
 

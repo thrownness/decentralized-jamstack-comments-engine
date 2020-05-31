@@ -3,7 +3,7 @@ var localMessages = {};
 document.getElementById('comments').innerHTML = `<div id="commentInput">
     <input id="commentName" type="text" placeholder="John Smith"><br/>
     <textarea id="commentMessage" placeholder="Your message here"></textarea><br/>
-    <button onclick="submitComment()">Submit Comment</button></div>
+    <button onclick="submitComment(this)">Submit Comment</button></div>
     <div id="commentList"></div>`;
 
 function getComments() {
@@ -42,7 +42,7 @@ function renderList() {
     }
 }
 
-async function submitComment() {
+async function submitComment(buttonElement) {
     var name = document.getElementById('commentName').value;
     var message = document.getElementById('commentMessage').value;
 
@@ -52,7 +52,7 @@ async function submitComment() {
     var currentYear = currentDate.getFullYear();
 
     var throw_away = await SEA.pair();
-    if (name.length < 1) { name = `Anon ${throw_away.pub.slice(-10)}` }
+    if (name.length < 1) { name = `Anon ${throw_away.pub.slice(-6)}` }
     var shared = await SEA.secret(blogEPubKey, throw_away);
     console.log(shared);
     var data = {page: location.pathname, message: message, authorName: name, timestamp: currentTime};
@@ -67,4 +67,6 @@ async function submitComment() {
 
     document.getElementById('commentName').value = '';
     document.getElementById('commentMessage').value = '';
+
+    buttonElement.innerText = 'Submitted! 👍';
 }
