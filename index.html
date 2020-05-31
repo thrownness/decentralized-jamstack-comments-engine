@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<html>
+    <head>
+        <title>Decentralized Jamstack Comments Engine</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="description" content="Your blog's P.O. Box">
+        <meta property="og:title" content="Comment Moderation Dashboard">
+        <meta property="og:description" content="Your blog's P.O. Box">
+        <meta property="og:site_name" content="Comment Moderation Dashboard">
+
+        <link rel="apple-touch-icon" sizes="120x120" href="icons/apple-touch-icon.png">
+        <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32x32.png">
+        <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16x16.png">
+        <link rel="manifest" href="icons/site.webmanifest">
+        <link rel="mask-icon" href="icons/safari-pinned-tab.svg" color="#5bbad5">
+        <link rel="shortcut icon" href="icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#2b5797">
+        <meta name="msapplication-config" content="icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+
+        <style>
+            #messageYear {
+                width: 80px;
+            }
+            #messageMonth {
+                width: 40px;
+            }
+            li {
+                background-color: bisque;
+                padding: 20px;
+                width:50%;
+            }
+            .messageMeta {
+                text-align:right;
+                font-style:italic;
+            }
+            .approved {
+                color: green;
+            }
+            .unapproved {
+                color: red;
+            }
+            .unread {
+                color: blue;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Decentralized Jamstack Comments Engine</h1>
+
+        <div class="view" id="splash" style="display:none;">
+            <h3>Create a new account?</h3>
+            <input onchange="createAccount(this)" placeholder="Enter profile name">
+            <h3>Already have one?</h3>
+            <input onchange="getAccount(this)" placeholder="Paste keys here to log in">
+        </div>
+
+        <div class="view" id="home" style="display:none;">
+            <h3>Welcome!</h3>
+
+            <button onclick="copyKeys(this)">Copy your keys & save them somewhere.</button>
+
+            <p>Place the following code on every page of your website where you want messages:</p>
+
+<pre>
+&lt;div id="comments"&gt;&lt;/div&gt;
+
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/gun.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/sea.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/lib/radix.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/lib/radisk.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/lib/store.js"&gt;&lt;/script&gt;
+&lt;script src="https://cdn.jsdelivr.net/npm/gun/lib/rindexed.js"&gt;&lt;/script&gt;
+&lt;script src="./comments.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+const peers = ['https://gun-us.herokuapp.com/gun','https://gun-eu.herokuapp.com/gun', 'https://gunjs.herokuapp.com/gun'];
+const gun = Gun({localStorage:false, peers:peers});
+const SEA = Gun.SEA;
+const blogPubKey = '<span id="blogPubKey"></span>'; 
+const blogEPubKey = '<span id="blogEPubKey"></span>';
+getComments();
+&lt;/script&gt;
+</pre>
+
+            <div>
+                <h3>Moderation Dashboard</h3>
+                <p><small><span class="unread">Unread comments are blue.</span><span class="unapproved">Unapproved comments are red.</span><span class="approved">Approved comments are green.</span></small></p>
+                <div>
+                    <p>Select year and month:</p>
+                    <input type="number" id="messageYear" name="year" min="2020">  
+                    <input type="number" id="messageMonth" name="month" min="1" max="12"> <br/>
+                    <button onclick="readInbox()">Read Inbox</button>
+                </div>
+                <ol id="messageList"></ol>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/sea.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/lib/radix.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/lib/radisk.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/lib/store.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/gun/lib/rindexed.js"></script>
+        <script>
+            const peers = ['https://gun-us.herokuapp.com/gun','https://gun-eu.herokuapp.com/gun'];
+            const gun = Gun({localStorage:false, peers:peers});
+            const user = gun.user();
+            const SEA = Gun.SEA;
+            var accountName = '';
+            var myKeys = {};
+            const currentDate = new Date();
+            const currentMonth = currentDate.getMonth() + 1;
+            const currentYear = currentDate.getFullYear();
+            var localMessages = {};
+
+            document.getElementById('messageYear').value = currentYear;
+            document.getElementById('messageMonth').value = currentMonth;
+
+            function focusView(viewID) {
+                var views = document.getElementsByClassName('view');
+                for (var i=0; i < views.length; i++) {
+                    if (views[i].id === viewID) {
+                        views[i].style.cssText = "";
+                    } else {
+                        views[i].style.display = "none";
+                    }
+                }
+            }
+
+            // check if user already logged in
+            var localstoragePubKey = localStorage.getItem('inboxkeys');
+            if (localstoragePubKey) {
+                console.log('localstorage key found. trying to log in')
+                
+                login(JSON.parse(localstoragePubKey));
+
+            } else {
+                console.log('no localstorage key found')
+                focusView('splash');
+            }
+
+            function getAccount(element) {
+                var accountKeys = JSON.parse(element.value);
+                login(accountKeys);
+
+                focusView('home');
+            }
+
+            function copyKeys(buttonElement) {
+                navigator.clipboard.writeText(JSON.stringify(myKeys)).then(function() {
+                    buttonElement.innerText = 'Copied! 👍';
+                }, function() {
+                    buttonElement.innerText = 'Copy permissions denied. 👎';
+                });
+            }
+
+            async function createAccount(element) {
+                console.log('creating your account...')
+                accountName = element.value;
+                console.log(`your name will be ${accountName}`)
+                element.value = '';
+                accountKeys = await SEA.pair();
+                login(accountKeys);
+
+                if (user.is) {
+                    user.get('name').put(accountName);
+                }
+
+                focusView('home');
+            }
+
+            function login(keys) {
+                localStorage.setItem('inboxkeys', JSON.stringify(keys));
+                user.auth(keys);
+                myKeys = keys;
+                document.getElementById('blogPubKey').innerText = myKeys.pub;
+                document.getElementById('blogEPubKey').innerText = myKeys.epub;
+                focusView('home');
+            }
+
+            function logout() {
+                localStorage.clear();
+                user.leave();
+                focusView('splash');
+            }
+
+            function readInbox() {
+                var inboxYear = document.getElementById('messageYear').value;
+                var inboxMonth = document.getElementById('messageMonth').value;
+                // do this for Forget after 1 month
+                //    gun.get(`@${myKeys.pub}#<?2629800`).map().on(async (node, hash) => {
+                gun.get(`@${myKeys.pub}/${inboxYear}-${inboxMonth}#`).map().once(async (node, hash) => {
+                    var payload = JSON.parse(node);
+                    var shared = await SEA.secret(payload.epub, myKeys);
+                    var decMsg = await SEA.decrypt(payload.msg, shared);
+                    localMessages[hash] = decMsg;
+                    var status = await user.get('comments').get(decMsg.page).get(hash).then();
+                    if (status === undefined) {
+                        localMessages[hash].status = 'unread'
+                    } else if (status === null) {
+                        localMessages[hash].status = 'unapproved'
+                    } else {
+                        localMessages[hash].status = 'approved'
+                        localMessages[hash].reply = status.reply;
+                    }
+                    renderList(localMessages);
+                });
+            }
+            
+            function renderList(messages) {
+                var messageList = document.getElementById("messageList");
+                messageList.innerHTML = '';
+                for (let [hash, node] of Object.entries(messages)) {
+                    var el = document.createElement('p');
+
+                    var message = document.createElement('p');
+                        message.innerText = node.message;
+                    var author = document.createElement('p');
+                        author.innerText = `Sincerely, ${node.authorName}`;
+                    var page = document.createElement('p');
+                        page.innerText = `Regarding "${node.page}"`
+                        page.classList = "messageMeta"
+                    var time = document.createElement('p');
+                        time.classList = "messageMeta"
+                        time.innerText = `${node.timestamp}`;
+                    var reply = document.createElement('textarea');
+                        if (node.reply) { reply.value = node.reply }
+                    var buttons = document.createElement('div');
+                        if (node.status == 'approved') {
+                            buttons.innerHTML = `<button onclick="approve(this)">Update Reply</button><button onclick="unapprove(this)">Unapprove</button>`;
+                        } else if (node.status == 'unapproved') {
+                            buttons.innerHTML = `<button onclick="approve(this)">Approve</button>`;
+                        } else if (node.status ==  'unread') {
+                            buttons.innerHTML = `<button onclick="approve(this)">Approve</button><button onclick="unapprove(this)">Reject</button>`;
+                        }
+                    var greeting = document.createElement('p');
+                        greeting.innerText = `Dear ${accountName},`;
+                    var item = document.createElement('li');
+                        item.id = hash;
+                        item.classList = node.status;
+                        item.appendChild(time);
+                        item.appendChild(page);
+                        item.appendChild(greeting);
+                        item.appendChild(message);
+                        item.appendChild(author);
+                        item.appendChild(reply);
+                        item.appendChild(buttons);
+                    messageList.appendChild(item);
+                }
+            }
+
+            function approve(element) {
+
+                var item = element.parentElement.parentElement;
+                var hash = item.id;
+                var replyText = item.children[5].value;
+
+                var messageItem = localMessages[hash];
+
+                user.get('comments').get(messageItem.page).get(hash).put({
+                    authorName: messageItem.authorName, 
+                    message: messageItem.message, 
+                    timestamp: messageItem.timestamp, 
+                    reply: replyText
+                });
+
+                localMessages[hash].status = 'approved';
+                localMessages[hash].reply = replyText;
+                item.classList = 'approved';
+            }
+
+            function unapprove(element) {
+                var grandparent = element.parentElement.parentElement;
+                var hash = grandparent.id;
+                var messageItem = localMessages[hash];
+                user.get('comments').get(messageItem.page).get(hash).put(null);
+
+                localMessages[hash].status = 'unapproved';
+                grandparent.classList = 'unapproved';
+            }
+
+        </script>
+    </body>
+</html>
