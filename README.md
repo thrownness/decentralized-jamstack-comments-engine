@@ -10,6 +10,8 @@ This is a decentralized, moderated commenting engine for Jamstack blogs or websi
 
 I will see them in the [Moderation Dashboard](https://thrownness.com/decentralized-jamstack-comments-engine/) because I am logged in as the owner of that example blog page.
 
+![image](https://user-images.githubusercontent.com/57295746/83358816-1c880000-a344-11ea-90c5-6f24367c2cef.png)
+
 ## Installation
 
 **Log in** to the [Moderation Dashboard](https://thrownness.com/decentralized-jamstack-comments-engine/) to create an account for your blog or website. *(You can host this dashboard yourself by simply including the `index.html` file in your own blog or hosting your own from github pages)*
