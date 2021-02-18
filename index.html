@@ -75,7 +75,7 @@
 &lt;script src="https://cdn.jsdelivr.net/npm/gun/lib/rindexed.js"&gt;&lt;/script&gt;
 &lt;script src="./comments.js"&gt;&lt;/script&gt;
 &lt;script&gt;
-const peers = ['https://gun-us.herokuapp.com/gun','https://gun-eu.herokuapp.com/gun', 'https://gunjs.herokuapp.com/gun'];
+const peers = ['https://gun-us.herokuapp.com/gun','https://iris.cx/gun', 'https://gunjs.herokuapp.com/gun'];
 const gun = Gun({localStorage:false, peers:peers});
 const SEA = Gun.SEA;
 const blogPubKey = '<span id="blogPubKey"></span>'; 
@@ -104,7 +104,7 @@ getComments();
         <script src="https://cdn.jsdelivr.net/npm/gun/lib/store.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/gun/lib/rindexed.js"></script>
         <script>
-            const peers = ['https://gun-us.herokuapp.com/gun','https://gun-eu.herokuapp.com/gun'];
+            const peers = ['https://gun-us.herokuapp.com/gun', 'https://iris.cx/gun', 'https://gunjs.herokuapp.com/gun'];
             const gun = Gun({localStorage:false, peers:peers});
             const user = gun.user();
             const SEA = Gun.SEA;
