@@ -38,3 +38,7 @@ li {
 ```
 
 And you're done. Use the [Dashboard](https://thrownness.github.io/decentralized-jamstack-comments-engine) to read your comments inbox on a month by month basis and do things with them.
+
+## How does this work?
+
+![image](./DecentralizedCommentsPattern.jpg)
